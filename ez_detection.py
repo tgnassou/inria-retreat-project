@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import roc_auc_score
 
 from itertools import chain, combinations
-
+from joblib import Parallel, delayed
 
 def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
@@ -49,7 +49,8 @@ predictor_names = (
 
 
 y = data[:, 2]
-for kernel in ['linear', 'rbf', 'poly', 'sigmoid']:
+
+def compute_cv_score(kernel):
     cv_score = []
     for features in list(powerset(predictor_names))[1:]:
         scores = []
@@ -66,5 +67,7 @@ for kernel in ['linear', 'rbf', 'poly', 'sigmoid']:
         cv_score.append(np.mean(scores))
 
     np.save(kernel + "_cv_score.npy", np.array(cv_score))
+    return None
 
+Parallel(n_jobs=-1)(delayed(compute_cv_score)(kernel) for kernel in ['linear', 'rbf', 'poly', 'sigmoid'])
 
